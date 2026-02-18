@@ -1,0 +1,12 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Entornos / dependencias (si hubiera en raíz)
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.env.local
