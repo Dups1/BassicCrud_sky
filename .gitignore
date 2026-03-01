@@ -10,3 +10,6 @@ __pycache__/
 venv/
 .env
 .env.local
+**/.env
+frontend/node_modules/
+frontend/dist/

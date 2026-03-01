@@ -1,6 +1,6 @@
 <?php
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json; charset=utf-8');
 
@@ -87,6 +87,25 @@ else if ($method === 'POST' && $action === 'login') {
         ]);
     } else {
         echo json_encode(['error' => 'Contraseña incorrecta']);
+    }
+}
+
+// PUT /usuarios.php?action=ubicacion  — guarda lat/lng del usuario
+else if ($method === 'PUT' && $action === 'ubicacion') {
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    if (!$data || !isset($data['id_usuario'], $data['latitud'], $data['longitud'])) {
+        die(json_encode(['error' => 'id_usuario, latitud y longitud son requeridos']));
+    }
+
+    $id  = intval($data['id_usuario']);
+    $lat = floatval($data['latitud']);
+    $lng = floatval($data['longitud']);
+
+    if ($conn->query("UPDATE Usuarios SET latitud=$lat, longitud=$lng WHERE id_usuario=$id")) {
+        echo json_encode(['message' => 'Ubicacion guardada']);
+    } else {
+        echo json_encode(['error' => $conn->error]);
     }
 }
 

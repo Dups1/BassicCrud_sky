@@ -19,6 +19,10 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}?action=login`, data);
   }
 
+  guardarUbicacion(id_usuario: number, latitud: number, longitud: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}?action=ubicacion`, { id_usuario, latitud, longitud });
+  }
+
   guardarSesion(usuario: any) {
     localStorage.setItem('usuario', JSON.stringify(usuario));
   }
