@@ -1,0 +1,108 @@
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+
+  <!-- Encabezado -->
+  <div class="relative flex items-center justify-between px-6 py-4 bg-white shadow-sm">
+    <img src="cesa.png" alt="CESA" class="h-16 object-contain" />
+    <img src="gatos.jpeg" alt="Gatos" class="h-16 object-contain" />
+  </div>
+
+  <div class="flex items-center justify-center px-4 py-12">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+
+    <!-- Logo / Título -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Radar Tec Laguna</h1>
+      <p class="text-gray-500 text-sm mt-1">{{ modo() === 'login' ? 'Inicia sesión' : 'Crea tu cuenta' }}</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex rounded-lg overflow-hidden border border-gray-200 mb-6">
+      <button (click)="cambiarModo('login')"
+        class="flex-1 py-2 text-sm font-medium transition"
+        [class.bg-blue-600]="modo() === 'login'"
+        [class.text-white]="modo() === 'login'"
+        [class.text-gray-500]="modo() !== 'login'">
+        Iniciar sesión
+      </button>
+      <button (click)="cambiarModo('register')"
+        class="flex-1 py-2 text-sm font-medium transition"
+        [class.bg-blue-600]="modo() === 'register'"
+        [class.text-white]="modo() === 'register'"
+        [class.text-gray-500]="modo() !== 'register'">
+        Registrarse
+      </button>
+    </div>
+
+    <!-- Error / Éxito -->
+    @if (error()) {
+      <div class="bg-red-50 border border-red-300 text-red-700 text-sm px-4 py-2 rounded-lg mb-4">
+        {{ error() }}
+      </div>
+    }
+    @if (exito()) {
+      <div class="bg-green-50 border border-green-300 text-green-700 text-sm px-4 py-2 rounded-lg mb-4">
+        {{ exito() }}
+      </div>
+    }
+
+    <!-- FORM LOGIN -->
+    @if (modo() === 'login') {
+      <form (ngSubmit)="login()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Correo o NC</label>
+          <input type="text" [(ngModel)]="loginForm.identificador" name="identificador" required
+            placeholder="correo@ejemplo.com o NC"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+          <input type="password" [(ngModel)]="loginForm.password" name="password" required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+        </div>
+        <button type="submit" [disabled]="cargando()"
+          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium text-sm disabled:opacity-50">
+          {{ cargando() ? 'Entrando...' : 'Entrar' }}
+        </button>
+      </form>
+    }
+
+    <!-- FORM REGISTER -->
+    @if (modo() === 'register') {
+      <form (ngSubmit)="register()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+          <input type="text" [(ngModel)]="registerForm.nombre" name="nombre" required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Correo</label>
+          <input type="email" [(ngModel)]="registerForm.correo" name="correo" required
+            placeholder="correo@ejemplo.com"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Número de Control <span class="text-gray-400">(opcional)</span></label>
+          <input type="text" [(ngModel)]="registerForm.nc" name="nc"
+            placeholder="Ej. 18000001 o C180000001"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña <span class="text-gray-400">(mín. 8 caracteres)</span></label>
+          <input type="password" [(ngModel)]="registerForm.password" name="password" required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
+          <input type="password" [(ngModel)]="registerForm.confirmar" name="confirmar" required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" />
+        </div>
+        <button type="submit" [disabled]="cargando()"
+          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium text-sm disabled:opacity-50">
+          {{ cargando() ? 'Registrando...' : 'Registrarse' }}
+        </button>
+      </form>
+    }
+
+  </div>
+  </div>
+</div>
