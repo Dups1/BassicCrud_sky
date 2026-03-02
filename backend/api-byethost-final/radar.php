@@ -23,13 +23,21 @@ $conn->set_charset("utf8");
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// GET todos (con horarios agrupados)
+// GET todos (con horarios agrupados), opcionalmente filtrado por id_usuario
 if ($method === 'GET' && !isset($_GET['id'])) {
-    $sql = "SELECT r.id_radar, r.categoria, r.nombre, r.direccion,
+    $where = '';
+    if (isset($_GET['id_usuario'])) {
+        $id_usuario = intval($_GET['id_usuario']);
+        $where = "WHERE r.id_usuario = $id_usuario";
+    }
+
+    $sql = "SELECT r.id_radar, r.id_categoria, c.categoria, r.nombre, r.direccion,
                    r.walkMin, r.driveMin, r.calificacion, r.precio, r.nota, r.favorito,
                    h.id_horario, h.dia, h.horarioapertura, h.horariocierre
             FROM Radar r
+            LEFT JOIN Categorias c ON r.id_categoria = c.id_categoria
             LEFT JOIN Horarios h ON r.id_radar = h.id_radar
+            $where
             ORDER BY r.id_radar, FIELD(h.dia,'Lunes','Martes','Miercoles','Jueves','Viernes','Sabado','Domingo')";
 
     $result = $conn->query($sql);
@@ -46,6 +54,7 @@ if ($method === 'GET' && !isset($_GET['id'])) {
         if (!isset($lugares[$id])) {
             $lugares[$id] = [
                 'id_radar'     => $row['id_radar'],
+                'id_categoria' => $row['id_categoria'],
                 'categoria'    => $row['categoria'],
                 'nombre'       => $row['nombre'],
                 'direccion'    => $row['direccion'],
@@ -101,19 +110,19 @@ else if ($method === 'POST') {
         die(json_encode(['error' => 'Se requiere id_usuario']));
     }
 
-    $id_usuario = intval($data['id_usuario']);
-    $categoria  = $conn->real_escape_string($data['categoria']);
-    $nombre     = $conn->real_escape_string($data['nombre']);
-    $direccion  = $conn->real_escape_string($data['direccion']);
-    $walkMin    = isset($data['walkMin'])    ? intval($data['walkMin'])           : 'NULL';
-    $driveMin   = isset($data['driveMin'])   ? intval($data['driveMin'])          : 'NULL';
-    $calificacion = isset($data['calificacion']) ? floatval($data['calificacion']) : 'NULL';
-    $precio     = floatval($data['precio']);
-    $nota       = isset($data['nota'])       ? "'".$conn->real_escape_string($data['nota'])."'" : 'NULL';
-    $favorito   = isset($data['favorito'])   ? ($data['favorito'] ? 1 : 0)       : 0;
+    $id_usuario   = intval($data['id_usuario']);
+    $id_categoria = intval($data['id_categoria']);
+    $nombre       = $conn->real_escape_string($data['nombre']);
+    $direccion    = $conn->real_escape_string($data['direccion']);
+    $walkMin      = isset($data['walkMin'])      ? intval($data['walkMin'])            : 'NULL';
+    $driveMin     = isset($data['driveMin'])     ? intval($data['driveMin'])           : 'NULL';
+    $calificacion = isset($data['calificacion']) ? floatval($data['calificacion'])     : 'NULL';
+    $precio       = floatval($data['precio']);
+    $nota         = isset($data['nota'])         ? "'".$conn->real_escape_string($data['nota'])."'" : 'NULL';
+    $favorito     = isset($data['favorito'])     ? ($data['favorito'] ? 1 : 0)        : 0;
 
-    $sql = "INSERT INTO Radar (id_usuario, categoria, nombre, direccion, walkMin, driveMin, calificacion, precio, nota, favorito)
-            VALUES ($id_usuario, '$categoria', '$nombre', '$direccion', $walkMin, $driveMin, $calificacion, $precio, $nota, $favorito)";
+    $sql = "INSERT INTO Radar (id_usuario, id_categoria, nombre, direccion, walkMin, driveMin, calificacion, precio, nota, favorito)
+            VALUES ($id_usuario, $id_categoria, '$nombre', '$direccion', $walkMin, $driveMin, $calificacion, $precio, $nota, $favorito)";
 
     if ($conn->query($sql)) {
         echo json_encode(['id' => $conn->insert_id, 'message' => 'Lugar creado']);
@@ -130,19 +139,19 @@ else if ($method === 'PUT') {
         die(json_encode(['error' => 'ID o datos faltantes']));
     }
 
-    $id         = intval($_GET['id']);
-    $categoria  = $conn->real_escape_string($data['categoria']);
-    $nombre     = $conn->real_escape_string($data['nombre']);
-    $direccion  = $conn->real_escape_string($data['direccion']);
-    $walkMin    = isset($data['walkMin'])    ? intval($data['walkMin'])           : 'NULL';
-    $driveMin   = isset($data['driveMin'])   ? intval($data['driveMin'])          : 'NULL';
-    $calificacion = isset($data['calificacion']) ? floatval($data['calificacion']) : 'NULL';
-    $precio     = floatval($data['precio']);
-    $nota       = isset($data['nota'])       ? "'".$conn->real_escape_string($data['nota'])."'" : 'NULL';
-    $favorito   = isset($data['favorito'])   ? ($data['favorito'] ? 1 : 0)       : 0;
+    $id           = intval($_GET['id']);
+    $id_categoria = intval($data['id_categoria']);
+    $nombre       = $conn->real_escape_string($data['nombre']);
+    $direccion    = $conn->real_escape_string($data['direccion']);
+    $walkMin      = isset($data['walkMin'])      ? intval($data['walkMin'])            : 'NULL';
+    $driveMin     = isset($data['driveMin'])     ? intval($data['driveMin'])           : 'NULL';
+    $calificacion = isset($data['calificacion']) ? floatval($data['calificacion'])     : 'NULL';
+    $precio       = floatval($data['precio']);
+    $nota         = isset($data['nota'])         ? "'".$conn->real_escape_string($data['nota'])."'" : 'NULL';
+    $favorito     = isset($data['favorito'])     ? ($data['favorito'] ? 1 : 0)        : 0;
 
     $sql = "UPDATE Radar SET
-                categoria='$categoria',
+                id_categoria=$id_categoria,
                 nombre='$nombre',
                 direccion='$direccion',
                 walkMin=$walkMin,

@@ -1,0 +1,411 @@
+<div class="container mx-auto p-6">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+      <a routerLink="/" class="text-gray-500 hover:text-gray-800 transition" title="Regresar">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <h1 class="text-3xl font-bold text-gray-800">Mis Lugares</h1>
+    </div>
+    <div class="flex gap-2">
+      <button (click)="mostrarModalTarjeta.set(true)"
+        class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition font-medium text-sm flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="2" y="5" width="20" height="14" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 10h20"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 15h4"/>
+        </svg>
+        Agregar tarjeta
+      </button>
+      @if (!mostrarFormulario()) {
+        <button (click)="mostrarFormulario.set(true)"
+          class="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition font-medium">
+          + Nuevo Lugar
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Tarjetas guardadas -->
+  @if (tarjetas().length > 0) {
+    <div class="mb-6">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Mis tarjetas</h2>
+      <div class="flex flex-wrap gap-3">
+        @for (t of tarjetas(); track t.id_tarjeta) {
+          <div class="bg-gray-800 text-white rounded-xl px-5 py-3 flex items-center justify-between gap-6 min-w-64">
+            <div>
+              <p class="text-xs text-gray-400">{{ t.nombre_titular }}</p>
+              <p class="font-mono tracking-widest text-sm mt-1">{{ t.numero_tarjeta }}</p>
+              <p class="text-xs text-gray-400 mt-1">Vence: {{ t.fecha_vencimiento }}</p>
+            </div>
+            <button (click)="eliminarTarjeta(t.id_tarjeta!)" title="Eliminar"
+              class="text-red-400 hover:text-red-300 transition text-lg">✕</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Modal agregar tarjeta -->
+  @if (mostrarModalTarjeta()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-2">
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="5" width="20" height="14" rx="2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 10h20"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 15h4"/>
+            </svg>
+            <h2 class="text-xl font-bold text-gray-800">Nueva tarjeta</h2>
+          </div>
+          <button (click)="mostrarModalTarjeta.set(false)" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">✕</button>
+        </div>
+        <form (ngSubmit)="guardarTarjeta()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del titular</label>
+            <input type="text" [(ngModel)]="tarjetaForm.nombre_titular" name="nombre_titular" required
+              placeholder="NOMBRE APELLIDO"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 text-sm uppercase" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Número de tarjeta</label>
+            <input type="text" [(ngModel)]="tarjetaForm.numero_tarjeta" name="numero_tarjeta" required
+              maxlength="16" placeholder="1234567890123456"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 text-sm font-mono" />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Vencimiento</label>
+              <input type="text" [(ngModel)]="tarjetaForm.fecha_vencimiento" name="fecha_vencimiento" required
+                maxlength="5" placeholder="MM/AA"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 text-sm font-mono" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+              <input type="password" [(ngModel)]="tarjetaForm.cvv" name="cvv" required
+                maxlength="3" placeholder="•••"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 text-sm font-mono" />
+            </div>
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button type="submit"
+              class="flex-1 bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900 transition font-medium">
+              Guardar tarjeta
+            </button>
+            <button type="button" (click)="mostrarModalTarjeta.set(false)"
+              class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition font-medium">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal promoción -->
+  @if (mostrarModalPromocion()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+            <h2 class="text-xl font-bold text-gray-800">Promocionar lugar</h2>
+          </div>
+          <button (click)="cancelarPromocion()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">✕</button>
+        </div>
+        <p class="text-sm text-purple-600 font-medium mb-6">{{ lugarAPromocionar()?.nombre }}</p>
+
+        <form (ngSubmit)="guardarPromocion()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tarjeta de pago</label>
+            @if (tarjetas().length === 0) {
+              <p class="text-sm text-red-500">No tienes tarjetas guardadas. Agrega una primero.</p>
+            } @else {
+              <select [(ngModel)]="promocionForm.id_tarjeta" name="id_tarjeta" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm">
+                <option [value]="0" disabled>Selecciona una tarjeta</option>
+                @for (t of tarjetas(); track t.id_tarjeta) {
+                  <option [value]="t.id_tarjeta">{{ t.numero_tarjeta }} — {{ t.nombre_titular }}</option>
+                }
+              </select>
+            }
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fecha inicio</label>
+              <input type="date" [(ngModel)]="promocionForm.fecha_inicio" name="fecha_inicio" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fecha fin</label>
+              <input type="date" [(ngModel)]="promocionForm.fecha_fin" name="fecha_fin" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Precio ($)</label>
+            <input type="number" [(ngModel)]="promocionForm.precio" name="precio" min="0" step="0.01" required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm" />
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button type="submit" [disabled]="tarjetas().length === 0"
+              class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition font-medium disabled:opacity-50">
+              Confirmar pago
+            </button>
+            <button type="button" (click)="cancelarPromocion()"
+              class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition font-medium">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Mis promociones activas -->
+  @if (promociones().length > 0) {
+    <div class="mb-6">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Mis promociones</h2>
+      <div class="flex flex-wrap gap-3">
+        @for (p of promociones(); track p.id_promocion) {
+          <div class="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 flex items-center justify-between gap-6 min-w-64">
+            <div>
+              <p class="text-sm font-semibold text-purple-800">{{ p.nombre_radar }}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{{ p.fecha_inicio }} → {{ p.fecha_fin }}</p>
+              <p class="text-xs font-medium text-green-700 mt-0.5">${{ p.precio }}</p>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full font-medium"
+              [class.bg-green-100]="p.estado === 'activo'"
+              [class.text-green-700]="p.estado === 'activo'"
+              [class.bg-gray-100]="p.estado === 'inactivo'"
+              [class.text-gray-500]="p.estado === 'inactivo'">
+              {{ p.estado }}
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Formulario -->
+  @if (mostrarFormulario()) {
+  <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-4">{{ modoEdicion() ? 'Editar' : 'Nuevo' }} Lugar</h2>
+    <form (ngSubmit)="guardar()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Categoría</label>
+        <select [(ngModel)]="nuevoLugar.id_categoria" name="id_categoria" required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+          <option [value]="0" disabled>Selecciona una categoría</option>
+          @for (cat of categorias(); track cat.id_categoria) {
+            <option [value]="cat.id_categoria">{{ cat.categoria }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Nombre</label>
+        <input type="text" [(ngModel)]="nuevoLugar.nombre" name="nombre" required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium mb-1">Dirección</label>
+        <input type="text" [(ngModel)]="nuevoLugar.direccion" name="direccion" required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Minutos caminando</label>
+        <input type="number" [(ngModel)]="nuevoLugar.walkMin" name="walkMin" min="0"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Minutos en auto</label>
+        <input type="number" [(ngModel)]="nuevoLugar.driveMin" name="driveMin" min="0"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Calificación (0-5)</label>
+        <input type="number" [(ngModel)]="nuevoLugar.calificacion" name="calificacion" min="0" max="5" step="0.1"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Precio</label>
+        <input type="number" [(ngModel)]="nuevoLugar.precio" name="precio" min="0" step="0.01" required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium mb-1">Nota</label>
+        <textarea [(ngModel)]="nuevoLugar.nota" name="nota" rows="2"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"></textarea>
+      </div>
+
+      <!-- Horarios -->
+      <div class="md:col-span-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-semibold text-gray-700">Horarios</h3>
+          <button type="button" (click)="agregarHorario()"
+            class="text-sm bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition">
+            + Agregar día
+          </button>
+        </div>
+        @if (horariosForm.length === 0) {
+          <p class="text-sm text-gray-400 italic">Sin horarios. Haz clic en "Agregar día" para añadir.</p>
+        }
+        @for (h of horariosForm; track $index) {
+          <div class="grid grid-cols-4 gap-2 mb-2 items-center">
+            <select [(ngModel)]="h.dia" [name]="'dia_' + $index"
+              class="px-2 py-2 border border-gray-300 rounded-lg text-sm">
+              @for (dia of diasSemana; track dia) {
+                <option [value]="dia">{{ dia }}</option>
+              }
+            </select>
+            <input type="time" [(ngModel)]="h.horarioapertura" [name]="'apertura_' + $index"
+              class="px-2 py-2 border border-gray-300 rounded-lg text-sm" />
+            <input type="time" [(ngModel)]="h.horariocierre" [name]="'cierre_' + $index"
+              class="px-2 py-2 border border-gray-300 rounded-lg text-sm" />
+            <button type="button" (click)="quitarHorario($index)"
+              class="bg-red-500 text-white px-2 py-2 rounded-lg hover:bg-red-600 text-sm">
+              Quitar
+            </button>
+          </div>
+        }
+      </div>
+
+      <div class="md:col-span-2 flex gap-2">
+        <button type="submit"
+          class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">
+          {{ modoEdicion() ? 'Actualizar' : 'Guardar' }}
+        </button>
+        <button type="button" (click)="cancelar()"
+          class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+      <strong>Error:</strong> {{ error() }}
+      <button (click)="cargarLugares()" class="ml-4 underline">Reintentar</button>
+    </div>
+  }
+
+  <!-- Cargando -->
+  @if (cargando()) {
+    <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+      Cargando datos...
+    </div>
+  }
+
+  @if (!cargando() && lugares().length === 0) {
+    <div class="bg-white rounded-xl shadow p-10 text-center text-gray-400">
+      Aún no has registrado ningún lugar
+    </div>
+  }
+
+  <!-- Tarjetas -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    @for (lugar of lugares(); track lugar.id_radar) {
+      <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition flex flex-col">
+
+        <div class="px-5 pt-5 pb-3 border-b border-gray-100">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-wide bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                {{ lugar.categoria }}
+              </span>
+              <h3 class="text-lg font-bold text-gray-800 mt-1">{{ lugar.nombre }}</h3>
+              <p class="text-sm text-gray-500 mt-0.5">{{ lugar.direccion }}</p>
+            </div>
+            <span class="text-lg font-bold text-green-600 whitespace-nowrap">${{ lugar.precio }}</span>
+          </div>
+        </div>
+
+        <div class="px-5 py-3 flex gap-4 text-sm text-gray-600 border-b border-gray-100">
+          <span title="Caminando" class="flex items-center gap-1">
+            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z"/>
+            </svg>
+            {{ lugar.walkMin ?? '-' }} min
+          </span>
+          <span title="En auto" class="flex items-center gap-1">
+            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17H5a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2h-3m-6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+            </svg>
+            {{ lugar.driveMin ?? '-' }} min
+          </span>
+          <span title="Calificación" class="flex items-center gap-1">
+            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            {{ lugar.calificacion ?? '-' }}
+          </span>
+        </div>
+
+        @if (lugar.nota) {
+          <div class="px-5 py-2 text-sm text-gray-500 italic border-b border-gray-100">
+            "{{ lugar.nota }}"
+          </div>
+        }
+
+        <div class="px-5 py-3 flex-1">
+          @if (lugar.horarios && lugar.horarios.length > 0) {
+            <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Horarios</p>
+            <div class="space-y-1">
+              @for (h of lugar.horarios; track h.id_horario) {
+                <div class="flex justify-between text-sm">
+                  <span class="font-medium text-gray-700 w-24">{{ h.dia }}</span>
+                  <span class="text-gray-500">{{ h.horarioapertura }} – {{ h.horariocierre }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-sm text-gray-400 italic">Sin horarios registrados</p>
+          }
+        </div>
+
+        <div class="px-4 py-2 border-t border-gray-100 flex items-center justify-between gap-2">
+          <button (click)="abrirModalPromocion(lugar)"
+            class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-xs transition flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+            Promocionar
+          </button>
+          <div class="flex gap-1">
+            <a [href]="getMapsUrl(lugar.direccion)" target="_blank"
+              class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-xs transition">
+              Abrir mapa
+            </a>
+            <button (click)="editar(lugar)"
+              class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 text-xs transition">
+              Editar
+            </button>
+            <button (click)="eliminar(lugar.id_radar!)"
+              class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 text-xs transition">
+              Eliminar
+            </button>
+          </div>
+        </div>
+
+      </div>
+    }
+  </div>
+</div>

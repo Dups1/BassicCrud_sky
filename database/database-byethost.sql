@@ -14,8 +14,12 @@
 
 -- elimina la tabla actual por esta nueva
 DROP TABLE IF EXISTS Horarios;
+DROP TABLE IF EXISTS promocion;
 DROP TABLE IF EXISTS Radar;
+DROP TABLE IF EXISTS Categorias;
+DROP TABLE IF EXISTS tarjeta;
 DROP TABLE IF EXISTS Usuarios;
+
 
 -- Crear tablas
 CREATE TABLE IF NOT EXISTS Usuarios(
@@ -30,10 +34,29 @@ CREATE TABLE IF NOT EXISTS Usuarios(
     CHECK (CHAR_LENGTH(password) >= 8),
     CHECK (nc IS NULL OR nc REGEXP '^[0-9]{8,9}$' OR nc REGEXP '^C[0-9]{9}$')
 );
+
+Create table IF NOT EXISTS Categorias(
+    id_categoria INT AUTO_INCREMENT PRIMARY KEY,
+    categoria ENUM('Pasteleria','Hoteles y Rentas','Hospitales','Restaurantes','Fondas','Cafeterias','Gimnasios','Otros') NOT NULL
+);
+
+Create table IF NOT EXISTS tarjeta(
+    id_tarjeta INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    numero_tarjeta VARCHAR(16) NOT NULL,
+    fecha_vencimiento VARCHAR(5) NOT NULL,
+    cvv VARCHAR(3) NOT NULL,
+    nombre_titular VARCHAR(100) NOT NULL,
+    CHECK (CHAR_LENGTH(numero_tarjeta) = 16),
+    CHECK (CHAR_LENGTH(cvv) = 3),
+    CHECK (CHAR_LENGTH(fecha_vencimiento) = 5),
+     FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS Radar(
     id_usuario INT NOT NULL,
     id_radar INT AUTO_INCREMENT PRIMARY KEY,
-    categoria VARCHAR(30) NOT NULL,
+    id_categoria INT NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     direccion VARCHAR(255) NOT NULL,
     walkMin int,
@@ -43,6 +66,7 @@ CREATE TABLE IF NOT EXISTS Radar(
     precio Decimal (10,2) NOT NULL,
     nota text,
     favorito boolean default false,
+    FOREIGN KEY (id_categoria) REFERENCES Categorias(id_categoria) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS Horarios(
@@ -54,7 +78,33 @@ CREATE TABLE IF NOT EXISTS Horarios(
     FOREIGN KEY (id_radar) REFERENCES Radar(id_radar) ON DELETE CASCADE
 );
 
+Create table IF NOT EXISTS promocion(
+    id_promocion INT AUTO_INCREMENT PRIMARY KEY,
+     id_usuario INT NOT NULL,
+    id_tarjeta INT NOT NULL,
+    id_radar INT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
+    estado ENUM('activo', 'inactivo') NOT NULL DEFAULT 'activo',
+    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_tarjeta) REFERENCES tarjeta(id_tarjeta) ON DELETE CASCADE,
+    FOREIGN KEY (id_radar) REFERENCES Radar(id_radar) ON DELETE CASCADE
+);
+INSERT INTO Categorias (categoria) VALUES
+    ('Pasteleria'),
+    ('Hoteles y Rentas'),
+    ('Hospitales'),
+    ('Restaurantes'),
+    ('Fondas'),
+    ('Cafeterias'),
+    ('Gimnasios'),
+    ('Otros');
+
 -- Verificar datos
 SELECT * FROM Radar;
 SELECT * FROM Horarios;
 SELECT * FROM Usuarios;
+SELECT * FROM Categorias;
+SELECT * FROM tarjeta;
+SELECT * FROM promocion;

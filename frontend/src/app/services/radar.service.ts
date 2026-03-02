@@ -16,6 +16,10 @@ export class RadarService {
     return this.http.get<Radar[]>(this.apiUrl);
   }
 
+  getByUsuario(id_usuario: number): Observable<Radar[]> {
+    return this.http.get<Radar[]>(`${this.apiUrl}?id_usuario=${id_usuario}`);
+  }
+
   getById(id: number): Observable<Radar> {
     return this.http.get<Radar>(`${this.apiUrl}?id=${id}`);
   }

@@ -29,23 +29,39 @@
       <p class="text-xl text-gray-600">Dashboard para estudiantes: lugares y servicios alrededor del Tec Laguna (Torreon), busca, filtra por categorias y ordena por cercania</p>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-      <!-- Radar -->
+    <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+
+      <!-- Radar Admin -->
       <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-1">
         <div class="text-center">
           <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold text-gray-800 mb-3">Radar Admin</h2>
+          <p class="text-gray-600 mb-6">Gestiona y registra los lugares cercanos al Tec</p>
+          <a routerLink="/radar"
+            class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+            Administrar
+          </a>
+        </div>
+      </div>
+
+      <!-- Radar Alumnos -->
+      <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-1">
+        <div class="text-center">
+          <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
             </svg>
           </div>
           <h2 class="text-2xl font-semibold text-gray-800 mb-3">Radar</h2>
-          <p class="text-gray-600 mb-6">Gestiona los lugares cercanos al hotel</p>
-          <a
-            routerLink="/radar"
-            class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-          >
-            Administrar
+          <p class="text-gray-600 mb-6">Explora los lugares y servicios cercanos al Tec</p>
+          <a routerLink="/radar-alumno"
+            class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+            Explorar
           </a>
         </div>
       </div>
@@ -60,10 +76,8 @@
           </div>
           <h2 class="text-2xl font-semibold text-gray-800 mb-3">Promocionarte</h2>
           <p class="text-gray-600 mb-6">Registra y gestiona tu negocio en el radar</p>
-          <a
-            routerLink="/radar"
-            class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition"
-          >
+          <a routerLink="/promocionarte"
+            class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
             Registrar
           </a>
         </div>

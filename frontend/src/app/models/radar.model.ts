@@ -3,7 +3,8 @@ import { Horario } from './horario.model';
 export interface Radar {
   id_radar?: number;
   id_usuario?: number;
-  categoria: string;
+  id_categoria: number;
+  categoria?: string;
   nombre: string;
   direccion: string;
   walkMin?: number | null;
