@@ -2,6 +2,8 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { UbicacionService } from '../../services/ubicacion.service';
+import { CloudinaryService } from '../../services/cloudinary.service';
 import { RadarService } from '../../services/radar.service';
 import { HorarioService } from '../../services/horario.service';
 import { AuthService } from '../../services/auth.service';
@@ -27,6 +29,8 @@ export class PromocionarteComponent implements OnInit {
   private categoriaService = inject(CategoriaService);
   private tarjetaService = inject(TarjetaService);
   private promocionService = inject(PromocionService);
+  private ubicacionService = inject(UbicacionService);
+  private cloudinaryService = inject(CloudinaryService);
 
   lugares = signal<Radar[]>([]);
   categorias = signal<Categoria[]>([]);
@@ -47,6 +51,12 @@ export class PromocionarteComponent implements OnInit {
   horariosForm: Horario[] = this.horariosDefault();
 
   readonly diasSemana = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
+  readonly PRECIO_DIA = 50;
+  modoAutoDir = signal(false);
+  cargandoDir = signal(false);
+  fotoPreview = signal<string | null>(null);
+  subiendoFoto = signal(false);
+  private fotoFile: File | null = null;
 
   private get idUsuario(): number {
     return this.authService.getSesion()?.id_usuario ?? 0;
@@ -66,9 +76,21 @@ export class PromocionarteComponent implements OnInit {
     });
   }
 
+  calcularDias(): number {
+    const inicio = new Date(this.promocionForm.fecha_inicio);
+    const fin = new Date(this.promocionForm.fecha_fin);
+    if (!this.promocionForm.fecha_inicio || !this.promocionForm.fecha_fin || fin <= inicio) return 0;
+    return Math.ceil((fin.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  calcularPrecio(): number {
+    return this.calcularDias() * this.PRECIO_DIA;
+  }
+
   guardarPromocion() {
     this.promocionForm.id_usuario = this.idUsuario;
     this.promocionForm.id_radar = this.lugarAPromocionar()!.id_radar!;
+    this.promocionForm.precio = this.calcularPrecio();
     this.promocionService.create(this.promocionForm).subscribe({
       next: () => {
         this.cargarPromociones();
@@ -140,6 +162,23 @@ export class PromocionarteComponent implements OnInit {
   }
 
   guardar() {
+    if (this.fotoFile) {
+      this.subiendoFoto.set(true);
+      this.cloudinaryService.uploadImage(this.fotoFile).subscribe({
+        next: (url) => {
+          this.nuevoLugar.foto = url;
+          this.fotoFile = null;
+          this.subiendoFoto.set(false);
+          this.guardarLugar();
+        },
+        error: () => { alert('Error al subir la imagen'); this.subiendoFoto.set(false); }
+      });
+    } else {
+      this.guardarLugar();
+    }
+  }
+
+  private guardarLugar() {
     if (this.modoEdicion()) {
       const id = this.lugarSeleccionado()!.id_radar!;
       this.radarService.update(id, this.nuevoLugar).subscribe({
@@ -211,16 +250,42 @@ export class PromocionarteComponent implements OnInit {
     }
   }
 
+  onFotoChange(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.fotoFile = file;
+    const reader = new FileReader();
+    reader.onload = () => this.fotoPreview.set(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
   cancelar() {
     this.nuevoLugar = this.lugarVacio();
     this.horariosForm = this.horariosDefault();
     this.modoEdicion.set(false);
     this.lugarSeleccionado.set(null);
     this.mostrarFormulario.set(false);
+    this.modoAutoDir.set(false);
+    this.fotoPreview.set(null);
+    this.fotoFile = null;
   }
 
   getMapsUrl(direccion: string): string {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`;
+  }
+
+  toggleModoDir() {
+    const auto = !this.modoAutoDir();
+    this.modoAutoDir.set(auto);
+    if (auto) {
+      this.cargandoDir.set(true);
+      this.ubicacionService.getDireccionActual().subscribe({
+        next: (dir) => { this.nuevoLugar.direccion = dir; this.cargandoDir.set(false); },
+        error: () => { alert('No se pudo obtener la ubicación'); this.modoAutoDir.set(false); this.cargandoDir.set(false); }
+      });
+    } else {
+      this.nuevoLugar.direccion = '';
+    }
   }
 
   abrirModalPromocion(lugar: Radar) {

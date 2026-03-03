@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS Radar(
     precio Decimal (10,2) NOT NULL,
     nota text,
     favorito boolean default false,
+     patrocinado boolean default false,
+    foto VARCHAR(500),
     FOREIGN KEY (id_categoria) REFERENCES Categorias(id_categoria) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );

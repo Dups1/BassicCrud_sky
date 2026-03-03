@@ -4,7 +4,11 @@ export const environment = {
   production: true,
   useMockData: false,
   // Ruta relativa para Byethost (mismo dominio, sin CORS)
-  apiUrl: '/api'
+  apiUrl: '/api',
+  cloudinary: {
+    cloudName: 'duahzxyts',
+    uploadPreset: 'orange'
+  }
 };
 
 // Cuando tengas el backend PHP listo en Byethost:

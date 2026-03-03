@@ -32,7 +32,7 @@ if ($method === 'GET' && !isset($_GET['id'])) {
     }
 
     $sql = "SELECT r.id_radar, r.id_categoria, c.categoria, r.nombre, r.direccion,
-                   r.walkMin, r.driveMin, r.calificacion, r.precio, r.nota, r.favorito,
+                   r.walkMin, r.driveMin, r.calificacion, r.precio, r.nota, r.favorito, r.patrocinado, r.foto,
                    h.id_horario, h.dia, h.horarioapertura, h.horariocierre
             FROM Radar r
             LEFT JOIN Categorias c ON r.id_categoria = c.id_categoria
@@ -64,6 +64,8 @@ if ($method === 'GET' && !isset($_GET['id'])) {
                 'precio'       => $row['precio'],
                 'nota'         => $row['nota'],
                 'favorito'     => (bool)$row['favorito'],
+                'patrocinado'  => (bool)$row['patrocinado'],
+                'foto'         => $row['foto'] ?? null,
                 'horarios'     => []
             ];
         }
@@ -120,9 +122,10 @@ else if ($method === 'POST') {
     $precio       = floatval($data['precio']);
     $nota         = isset($data['nota'])         ? "'".$conn->real_escape_string($data['nota'])."'" : 'NULL';
     $favorito     = isset($data['favorito'])     ? ($data['favorito'] ? 1 : 0)        : 0;
+    $fotoVal      = isset($data['foto']) && $data['foto'] ? "'".$conn->real_escape_string($data['foto'])."'" : 'NULL';
 
-    $sql = "INSERT INTO Radar (id_usuario, id_categoria, nombre, direccion, walkMin, driveMin, calificacion, precio, nota, favorito)
-            VALUES ($id_usuario, $id_categoria, '$nombre', '$direccion', $walkMin, $driveMin, $calificacion, $precio, $nota, $favorito)";
+    $sql = "INSERT INTO Radar (id_usuario, id_categoria, nombre, direccion, walkMin, driveMin, calificacion, precio, nota, favorito, foto)
+            VALUES ($id_usuario, $id_categoria, '$nombre', '$direccion', $walkMin, $driveMin, $calificacion, $precio, $nota, $favorito, $fotoVal)";
 
     if ($conn->query($sql)) {
         echo json_encode(['id' => $conn->insert_id, 'message' => 'Lugar creado']);
@@ -149,6 +152,7 @@ else if ($method === 'PUT') {
     $precio       = floatval($data['precio']);
     $nota         = isset($data['nota'])         ? "'".$conn->real_escape_string($data['nota'])."'" : 'NULL';
     $favorito     = isset($data['favorito'])     ? ($data['favorito'] ? 1 : 0)        : 0;
+    $fotoSet = isset($data['foto']) && $data['foto'] ? ", foto='".$conn->real_escape_string($data['foto'])."'" : '';
 
     $sql = "UPDATE Radar SET
                 id_categoria=$id_categoria,
@@ -160,6 +164,7 @@ else if ($method === 'PUT') {
                 precio=$precio,
                 nota=$nota,
                 favorito=$favorito
+                $fotoSet
             WHERE id_radar=$id";
 
     if ($conn->query($sql)) {

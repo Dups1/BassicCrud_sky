@@ -13,5 +13,7 @@ export interface Radar {
   precio: number;
   nota?: string | null;
   favorito?: boolean;
+  patrocinado?: boolean;
+  foto?: string | null;
   horarios?: Horario[];
 }

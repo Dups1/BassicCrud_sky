@@ -78,6 +78,8 @@ else if ($method === 'POST') {
             VALUES ($id_usuario, $id_tarjeta, $id_radar, '$fecha_inicio', '$fecha_fin', $precio, '$estado')";
 
     if ($conn->query($sql)) {
+        // Activar patrocinado en Radar
+        $conn->query("UPDATE Radar SET patrocinado=1 WHERE id_radar=$id_radar");
         echo json_encode(['id' => $conn->insert_id, 'message' => 'Promocion creada']);
     } else {
         echo json_encode(['error' => $conn->error]);
@@ -96,6 +98,12 @@ else if ($method === 'PUT') {
     $estado = $conn->real_escape_string($data['estado']);
 
     if ($conn->query("UPDATE promocion SET estado='$estado' WHERE id_promocion=$id")) {
+        // Sincronizar patrocinado en Radar según el nuevo estado
+        $patrocinado = ($estado === 'activo') ? 1 : 0;
+        $res = $conn->query("SELECT id_radar FROM promocion WHERE id_promocion=$id");
+        if ($res && $row = $res->fetch_assoc()) {
+            $conn->query("UPDATE Radar SET patrocinado=$patrocinado WHERE id_radar={$row['id_radar']}");
+        }
         echo json_encode(['message' => 'Estado actualizado']);
     } else {
         echo json_encode(['error' => $conn->error]);
@@ -108,7 +116,14 @@ else if ($method === 'DELETE') {
         die(json_encode(['error' => 'ID requerido']));
     }
     $id = intval($_GET['id']);
+    // Obtener id_radar antes de eliminar para desactivar patrocinado
+    $res = $conn->query("SELECT id_radar FROM promocion WHERE id_promocion=$id");
+    $id_radar_del = ($res && $row = $res->fetch_assoc()) ? $row['id_radar'] : null;
+
     if ($conn->query("DELETE FROM promocion WHERE id_promocion=$id")) {
+        if ($id_radar_del) {
+            $conn->query("UPDATE Radar SET patrocinado=0 WHERE id_radar=$id_radar_del");
+        }
         echo json_encode(['message' => 'Promocion eliminada']);
     } else {
         echo json_encode(['error' => $conn->error]);
