@@ -1,26 +1,10 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json; charset=utf-8');
+require 'config.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
+setCorsHeaders();
+handleOptions();
 
-$host = 'sql101.byethost5.com';
-$user = 'b5_41127736';
-$pass = '8721davidD.w';
-$db = 'b5_41127736_ServiHotelero';
-
-$conn = new mysqli($host, $user, $pass, $db);
-
-if ($conn->connect_error) {
-    die(json_encode(['error' => 'Conexion fallida']));
-}
-
-$conn->set_charset("utf8");
-
+$conn = getDbConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 
 // GET todos (con horarios agrupados), opcionalmente filtrado por id_usuario
@@ -116,10 +100,10 @@ else if ($method === 'POST') {
     $id_categoria = intval($data['id_categoria']);
     $nombre       = $conn->real_escape_string($data['nombre']);
     $direccion    = $conn->real_escape_string($data['direccion']);
-    $walkMin      = isset($data['walkMin'])      ? intval($data['walkMin'])            : 'NULL';
-    $driveMin     = isset($data['driveMin'])     ? intval($data['driveMin'])           : 'NULL';
-    $calificacion = isset($data['calificacion']) ? floatval($data['calificacion'])     : 'NULL';
-    $precio       = floatval($data['precio']);
+    $walkMin      = isset($data['walkMin']) && $data['walkMin'] !== null ? intval($data['walkMin']) : 'NULL';
+    $driveMin     = isset($data['driveMin']) && $data['driveMin'] !== null ? intval($data['driveMin']) : 'NULL';
+    $calificacion = isset($data['calificacion']) && $data['calificacion'] !== null ? floatval($data['calificacion']) : 'NULL';
+    $precio       = isset($data['precio']) && $data['precio'] !== null ? floatval($data['precio']) : 0;
     $nota         = isset($data['nota'])         ? "'".$conn->real_escape_string($data['nota'])."'" : 'NULL';
     $favorito     = isset($data['favorito'])     ? ($data['favorito'] ? 1 : 0)        : 0;
     $fotoVal      = isset($data['foto']) && $data['foto'] ? "'".$conn->real_escape_string($data['foto'])."'" : 'NULL';
@@ -146,10 +130,10 @@ else if ($method === 'PUT') {
     $id_categoria = intval($data['id_categoria']);
     $nombre       = $conn->real_escape_string($data['nombre']);
     $direccion    = $conn->real_escape_string($data['direccion']);
-    $walkMin      = isset($data['walkMin'])      ? intval($data['walkMin'])            : 'NULL';
-    $driveMin     = isset($data['driveMin'])     ? intval($data['driveMin'])           : 'NULL';
-    $calificacion = isset($data['calificacion']) ? floatval($data['calificacion'])     : 'NULL';
-    $precio       = floatval($data['precio']);
+    $walkMin      = isset($data['walkMin']) && $data['walkMin'] !== null ? intval($data['walkMin']) : 'NULL';
+    $driveMin     = isset($data['driveMin']) && $data['driveMin'] !== null ? intval($data['driveMin']) : 'NULL';
+    $calificacion = isset($data['calificacion']) && $data['calificacion'] !== null ? floatval($data['calificacion']) : 'NULL';
+    $precio       = isset($data['precio']) && $data['precio'] !== null ? floatval($data['precio']) : 0;
     $nota         = isset($data['nota'])         ? "'".$conn->real_escape_string($data['nota'])."'" : 'NULL';
     $favorito     = isset($data['favorito'])     ? ($data['favorito'] ? 1 : 0)        : 0;
     $fotoSet = isset($data['foto']) && $data['foto'] ? ", foto='".$conn->real_escape_string($data['foto'])."'" : '';

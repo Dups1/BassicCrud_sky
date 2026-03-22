@@ -10,11 +10,16 @@ import { AuthService } from '../../services/auth.service';
 import { CategoriaService } from '../../services/categoria.service';
 import { TarjetaService } from '../../services/tarjeta.service';
 import { PromocionService } from '../../services/promocion.service';
+import { CatalogoService } from '../../services/catalogo.service';
+import { ComentarioService } from '../../services/comentario.service';
+import { TransferenciaService } from '../../services/transferencia.service';
 import { Radar } from '../../models/radar.model';
 import { Horario } from '../../models/horario.model';
 import { Categoria } from '../../models/categoria.model';
 import { Tarjeta } from '../../models/tarjeta.model';
 import { Promocion } from '../../models/promocion.model';
+import { Catalogo } from '../../models/catalogo.model';
+import { Comentario } from '../../models/comentario.model';
 
 @Component({
   selector: 'app-promocionarte',
@@ -31,11 +36,26 @@ export class PromocionarteComponent implements OnInit {
   private promocionService = inject(PromocionService);
   private ubicacionService = inject(UbicacionService);
   private cloudinaryService = inject(CloudinaryService);
+  private cataloService = inject(CatalogoService);
+  private comentarioService = inject(ComentarioService);
+  private transferenciaService = inject(TransferenciaService);
 
   lugares = signal<Radar[]>([]);
   categorias = signal<Categoria[]>([]);
   tarjetas = signal<Tarjeta[]>([]);
   promociones = signal<Promocion[]>([]);
+  catalogosPorLugar = signal<Map<number, Catalogo[]>>(new Map());
+  comentariosPorLugar = signal<Map<number, Comentario[]>>(new Map());
+  mostrarComentarios = signal<number | null>(null);
+
+  // CRUD catalogo
+  mostrarFormCatalogo = signal<number | null>(null); // id_radar activo
+  nuevoCatalogo: Catalogo = this.catalogoVacio(0);
+  editandoCatalogo = signal<Catalogo | null>(null);
+  subiendoFotoCatalogo = signal(false);
+  fotoCatalogoPreview = signal<string | null>(null);
+  private fotoCatalogoFile: File | null = null;
+
   mostrarModalTarjeta = signal(false);
   mostrarModalPromocion = signal(false);
   lugarAPromocionar = signal<Radar | null>(null);
@@ -86,17 +106,33 @@ export class PromocionarteComponent implements OnInit {
   calcularPrecio(): number {
     return this.calcularDias() * this.PRECIO_DIA;
   }
-
+ 
   guardarPromocion() {
     this.promocionForm.id_usuario = this.idUsuario;
     this.promocionForm.id_radar = this.lugarAPromocionar()!.id_radar!;
     this.promocionForm.precio = this.calcularPrecio();
+    
     this.promocionService.create(this.promocionForm).subscribe({
-      next: () => {
-        this.cargarPromociones();
-        this.mostrarModalPromocion.set(false);
-        this.promocionForm = this.promocionVacia();
-        this.lugarAPromocionar.set(null);
+      next: (resp) => {
+        // Crear transferencia
+        const dias = this.calcularDias();
+        const usuario = this.authService.getSesion();
+        this.transferenciaService.create({
+          id_usuario: this.idUsuario,
+          nombre_usuario: usuario?.nombre || '',
+          id_promocion: resp.id || 0,
+          nombre_lugar: this.lugarAPromocionar()!.nombre,
+          monto: this.promocionForm.precio,
+          dias: dias
+        }).subscribe({
+          next: () => {
+            this.cargarPromociones();
+            this.mostrarModalPromocion.set(false);
+            this.promocionForm = this.promocionVacia();
+            this.lugarAPromocionar.set(null);
+          },
+          error: () => alert('Error al registrar transferencia')
+        });
       },
       error: () => alert('Error al crear la promoción')
     });
@@ -148,9 +184,160 @@ export class PromocionarteComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(null);
     this.radarService.getByUsuario(this.idUsuario).subscribe({
-      next: (data) => { this.lugares.set(data); this.cargando.set(false); },
+      next: (data) => {
+        this.lugares.set(data);
+        this.cargando.set(false);
+        this.cargarCatalogos(data);
+        this.cargarComentarios(data);
+      },
       error: (err) => { this.error.set(`Error: ${err.status}`); this.cargando.set(false); }
     });
+  }
+
+  private cargarCatalogos(lugares: Radar[]) {
+    const mapa = new Map<number, Catalogo[]>();
+    let pendientes = lugares.length;
+    if (pendientes === 0) { this.catalogosPorLugar.set(mapa); return; }
+    lugares.forEach((l) => {
+      this.cataloService.getByRadar(l.id_radar!).subscribe({
+        next: (items) => {
+          mapa.set(l.id_radar!, items);
+          pendientes--;
+          if (pendientes === 0) this.catalogosPorLugar.set(new Map(mapa));
+        },
+        error: () => {
+          mapa.set(l.id_radar!, []);
+          pendientes--;
+          if (pendientes === 0) this.catalogosPorLugar.set(new Map(mapa));
+        }
+      });
+    });
+  }
+
+  private cargarComentarios(lugares: Radar[]) {
+    const mapa = new Map<number, Comentario[]>();
+    let pendientes = lugares.length;
+    if (pendientes === 0) { this.comentariosPorLugar.set(mapa); return; }
+    lugares.forEach((l) => {
+      this.comentarioService.getByRadar(l.id_radar!).subscribe({
+        next: (items) => {
+          mapa.set(l.id_radar!, items);
+          pendientes--;
+          if (pendientes === 0) this.comentariosPorLugar.set(new Map(mapa));
+        },
+        error: () => {
+          mapa.set(l.id_radar!, []);
+          pendientes--;
+          if (pendientes === 0) this.comentariosPorLugar.set(new Map(mapa));
+        }
+      });
+    });
+  }
+
+  getComentarios(idRadar: number): Comentario[] {
+    return this.comentariosPorLugar().get(idRadar) ?? [];
+  }
+
+  toggleComentarios(idRadar: number) {
+    this.mostrarComentarios.set(this.mostrarComentarios() === idRadar ? null : idRadar);
+  }
+
+  getCatalogo(idRadar: number): Catalogo[] {
+    return this.catalogosPorLugar().get(idRadar) ?? [];
+  }
+
+  getPrecioPromedio(idRadar: number): number {
+    const catalogo = this.getCatalogo(idRadar);
+    if (catalogo.length === 0) return 0;
+    const suma = catalogo.reduce((acc, p) => acc + (Number(p.precio) || 0), 0);
+    const promedio = suma / catalogo.length;
+    return isNaN(promedio) ? 0 : Math.round(promedio * 100) / 100;
+  }
+
+  getCalificacionPromedio(idRadar: number): number {
+    const comentarios = this.getComentarios(idRadar);
+    if (comentarios.length === 0) return 0;
+    const suma = comentarios.reduce((acc, c) => acc + (Number(c.calificacion) || 0), 0);
+    const promedio = suma / comentarios.length;
+    return isNaN(promedio) ? 0 : Math.round(promedio * 100) / 100;
+  }
+
+  abrirFormCatalogo(idRadar: number) {
+    this.nuevoCatalogo = this.catalogoVacio(idRadar);
+    this.editandoCatalogo.set(null);
+    this.fotoCatalogoPreview.set(null);
+    this.fotoCatalogoFile = null;
+    this.mostrarFormCatalogo.set(idRadar);
+  }
+
+  cerrarFormCatalogo() {
+    this.mostrarFormCatalogo.set(null);
+    this.editandoCatalogo.set(null);
+    this.fotoCatalogoPreview.set(null);
+    this.fotoCatalogoFile = null;
+  }
+
+  iniciarEditarProducto(p: Catalogo) {
+    this.editandoCatalogo.set({ ...p });
+    this.fotoCatalogoPreview.set(p.foto ?? null);
+    this.fotoCatalogoFile = null;
+    this.mostrarFormCatalogo.set(p.id_radar);
+  }
+
+  onFotoCatalogoChange(ev: Event) {
+    const file = (ev.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.fotoCatalogoFile = file;
+    const reader = new FileReader();
+    reader.onload = () => this.fotoCatalogoPreview.set(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  guardarProducto() {
+    const subir = (onDone: (url: string | null) => void) => {
+      if (this.fotoCatalogoFile) {
+        this.subiendoFotoCatalogo.set(true);
+        this.cloudinaryService.uploadImage(this.fotoCatalogoFile).subscribe({
+          next: (url) => { this.subiendoFotoCatalogo.set(false); onDone(url); },
+          error: () => { alert('Error al subir imagen'); this.subiendoFotoCatalogo.set(false); }
+        });
+      } else {
+        onDone(null);
+      }
+    };
+
+    const editando = this.editandoCatalogo();
+    if (editando) {
+      subir((url) => {
+        const payload: Partial<Catalogo> = { ...editando };
+        if (url) payload.foto = url;
+        this.cataloService.update(editando.id_catalogo!, payload).subscribe({
+          next: () => { this.cargarCatalogos(this.lugares()); this.cerrarFormCatalogo(); },
+          error: () => alert('Error al actualizar producto')
+        });
+      });
+    } else {
+      subir((url) => {
+        const payload: Catalogo = { ...this.nuevoCatalogo };
+        if (url) payload.foto = url;
+        this.cataloService.create(payload).subscribe({
+          next: () => { this.cargarCatalogos(this.lugares()); this.cerrarFormCatalogo(); },
+          error: () => alert('Error al crear producto')
+        });
+      });
+    }
+  }
+
+  eliminarProducto(p: Catalogo) {
+    if (!confirm('Eliminar producto?')) return;
+    this.cataloService.delete(p.id_catalogo!).subscribe({
+      next: () => this.cargarCatalogos(this.lugares()),
+      error: () => alert('Error al eliminar producto')
+    });
+  }
+
+  private catalogoVacio(idRadar: number): Catalogo {
+    return { id_radar: idRadar, nombre: '', descripcion: '', precio: 0, foto: null };
   }
 
   agregarHorario() {

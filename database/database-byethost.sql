@@ -14,6 +14,9 @@
 
 -- elimina la tabla actual por esta nueva
 DROP TABLE IF EXISTS Horarios;
+DROP TABLE IF EXISTS Comentarios;
+DROP TABLE IF EXISTS Catalogo;
+DROP TABLE IF EXISTS Transferencias;
 DROP TABLE IF EXISTS promocion;
 DROP TABLE IF EXISTS Radar;
 DROP TABLE IF EXISTS Categorias;
@@ -63,7 +66,7 @@ CREATE TABLE IF NOT EXISTS Radar(
     driveMin int,
     calificacion DECIMAL(2,1),
     Check (calificacion >= 0 and calificacion <= 5),
-    precio Decimal (10,2) NOT NULL,
+    precio Decimal (10,2),
     nota text,
     favorito boolean default false,
      patrocinado boolean default false,
@@ -80,6 +83,27 @@ CREATE TABLE IF NOT EXISTS Horarios(
     FOREIGN KEY (id_radar) REFERENCES Radar(id_radar) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS Comentarios(
+    id_comentario INT AUTO_INCREMENT PRIMARY KEY,
+    id_radar INT NOT NULL,
+    id_usuario INT,
+    nombre_estudiante VARCHAR(150) NOT NULL,
+    calificacion INT NOT NULL DEFAULT 5,
+    opinion TEXT NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_radar) REFERENCES Radar(id_radar) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Catalogo(
+    id_catalogo INT AUTO_INCREMENT PRIMARY KEY,
+    id_radar INT NOT NULL,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10,2) NOT NULL,
+    foto VARCHAR(500),
+    FOREIGN KEY (id_radar) REFERENCES Radar(id_radar) ON DELETE CASCADE
+);
+
 Create table IF NOT EXISTS promocion(
     id_promocion INT AUTO_INCREMENT PRIMARY KEY,
      id_usuario INT NOT NULL,
@@ -92,6 +116,19 @@ Create table IF NOT EXISTS promocion(
     FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
     FOREIGN KEY (id_tarjeta) REFERENCES tarjeta(id_tarjeta) ON DELETE CASCADE,
     FOREIGN KEY (id_radar) REFERENCES Radar(id_radar) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Transferencias(
+    id_transferencia INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    nombre_usuario VARCHAR(100) NOT NULL,
+    id_promocion INT NOT NULL,
+    nombre_lugar VARCHAR(100) NOT NULL,
+    monto DECIMAL(10,2) NOT NULL,
+    dias INT NOT NULL,
+    fecha_transaccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_promocion) REFERENCES promocion(id_promocion) ON DELETE CASCADE
 );
 INSERT INTO Categorias (categoria) VALUES
     ('Pasteleria'),
@@ -110,3 +147,6 @@ SELECT * FROM Usuarios;
 SELECT * FROM Categorias;
 SELECT * FROM tarjeta;
 SELECT * FROM promocion;
+SELECT * FROM Catalogo;
+SELECT * FROM Comentarios;
+SELECT * FROM Transferencias;

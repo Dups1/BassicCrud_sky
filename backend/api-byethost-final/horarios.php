@@ -1,26 +1,10 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json; charset=utf-8');
+require 'config.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
+setCorsHeaders();
+handleOptions();
 
-$host = 'sql101.byethost5.com';
-$user = 'b5_41127736';
-$pass = '8721davidD.w';
-$db = 'b5_41127736_ServiHotelero';
-
-$conn = new mysqli($host, $user, $pass, $db);
-
-if ($conn->connect_error) {
-    die(json_encode(['error' => 'Conexion fallida']));
-}
-
-$conn->set_charset("utf8");
-
+$conn = getDbConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 
 // GET todos los horarios (o filtrar por id_radar)

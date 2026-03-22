@@ -10,10 +10,19 @@
       <h1 class="text-3xl font-bold text-gray-800">Radar de Lugares</h1>
     </div>
     @if (!mostrarFormulario()) {
-      <button (click)="mostrarFormulario.set(true)"
-        class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-        + Nuevo Lugar
-      </button>
+      <div class="flex items-center gap-3">
+        <input #csvInput type="file" accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          class="hidden" (change)="onCsvFileChange($event)" />
+        <button type="button" (click)="abrirCsv()"
+          class="bg-gray-700 text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          [disabled]="importandoCsv()">
+          @if (importandoCsv()) { Importando... } @else { Importar CSV }
+        </button>
+        <button (click)="mostrarFormulario.set(true)"
+          class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+          + Nuevo Lugar
+        </button>
+      </div>
     }
   </div>
 
@@ -74,13 +83,13 @@
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
       </div>
 
-      <div>
+      <div class="hidden">
         <label class="block text-sm font-medium mb-1">Calificación (0-5)</label>
         <input type="number" [(ngModel)]="nuevoLugar.calificacion" name="calificacion" min="0" max="5" step="0.1"
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
       </div>
 
-      <div>
+      <div class="hidden">
         <label class="block text-sm font-medium mb-1">Precio</label>
         <input type="number" [(ngModel)]="nuevoLugar.precio" name="precio" min="0" step="0.01" required
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
@@ -179,105 +188,255 @@
     </div>
   }
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl">
     @for (lugar of lugares(); track lugar.id_radar) {
-      <div class="rounded-xl shadow-md hover:shadow-xl transition flex flex-col"
+      <div class="rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow flex flex-col h-full"
         [class]="lugar.patrocinado
-          ? 'bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 border-2 border-amber-300 shadow-amber-200'
-          : 'bg-white'">
+          ? 'bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 border-2 border-amber-300'
+          : 'bg-white border border-gray-100'">
 
         <!-- Foto -->
         @if (lugar.foto) {
-          <img [src]="lugar.foto!" alt="{{ lugar.nombre }}"
-            class="w-full h-36 object-cover rounded-t-xl" />
+          <div class="relative">
+            <img [src]="lugar.foto!" alt="{{ lugar.nombre }}"
+              class="w-full h-48 object-cover" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+          </div>
         }
 
-        <!-- Header tarjeta -->
-        <div class="px-5 pt-5 pb-3 border-b border-gray-100">
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-semibold uppercase tracking-wide bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+        <!-- Cuerpo principal: info + horarios en columnas -->
+        <div class="flex flex-col divide-y divide-gray-100 flex-1">
+
+          <!-- Columna izquierda: info -->
+          <div class="flex-1 px-4 pt-3 pb-2">
+            <!-- Badges -->
+            <div class="flex items-center gap-1.5 flex-wrap mb-1">
+              @if (lugar.categoria) {
+                <span class="text-xs font-bold uppercase tracking-wide bg-gray-800 text-white px-2 py-0.5 rounded-full">
                   {{ lugar.categoria }}
                 </span>
-                @if (lugar.patrocinado) {
-                  <span class="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 bg-gradient-to-r from-sky-400 to-blue-500 text-white">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
-                      <defs>
-                        <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" style="stop-color:#38bdf8"/>
-                          <stop offset="100%" style="stop-color:#1d4ed8"/>
-                        </linearGradient>
-                      </defs>
-                      <path fill="url(#starGrad)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              }
+              @if (lugar.patrocinado) {
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 bg-gradient-to-r from-sky-400 to-blue-500 text-white">
+                  <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  Patr.
+                </span>
+              }
+            </div>
+
+            <h3 class="text-sm font-bold text-gray-900 leading-tight">{{ lugar.nombre }}</h3>
+            <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ lugar.direccion }}</p>
+
+            <!-- Stats -->
+            <div class="flex flex-wrap gap-2 text-xs text-gray-600 mt-1">
+              @if (lugar.walkMin != null) {
+                <span class="flex items-center gap-0.5">
+                  <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z"/>
+                  </svg>
+                  {{ lugar.walkMin }}m
+                </span>
+              }
+              @if (lugar.driveMin != null) {
+                <span class="flex items-center gap-0.5">
+                  <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17H5a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2h-3m-6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+                  </svg>
+                  {{ lugar.driveMin }}m
+                </span>
+              }
+              @if (lugar.calificacion != null) {
+                <span class="flex items-center gap-0.5 font-semibold text-yellow-600">
+                  <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  {{ lugar.calificacion }}
+                </span>
+              }
+            </div>
+
+            <span class="text-sm font-bold text-green-600 mt-1 block">${{ getPrecioPromedio(lugar.id_radar!) }}</span>
+            
+            <!-- Calificacion promedio de comentarios -->
+            @if (getComentarios(lugar.id_radar!).length > 0) {
+              <div class="flex items-center gap-1 mt-1">
+                <div class="flex gap-0.5">
+                  @for (i of [1, 2, 3, 4, 5]; track i) {
+                    <svg class="w-3 h-3" [class.text-yellow-400]="i <= getCalificacionPromedio(lugar.id_radar!)" [class.text-gray-300]="i > getCalificacionPromedio(lugar.id_radar!)" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
-                    Patrocinado
-                  </span>
+                  }
+                </div>
+                <span class="text-xs text-gray-600 font-medium">{{ getCalificacionPromedio(lugar.id_radar!) }}</span>
+                <span class="text-xs text-gray-400">({{ getComentarios(lugar.id_radar!).length }})</span>
+              </div>
+            } @else {
+              <p class="text-xs text-gray-400 italic mt-1">Sin opiniones aun</p>
+            }
+            
+            @if (lugar.nota) {
+              <p class="text-xs text-gray-500 italic mt-0.5">"{{ lugar.nota }}"</p>
+            }
+          </div>
+
+          <!-- Columna derecha: horarios -->
+          <div class="px-4 py-3 bg-gray-50/60">
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Horario</p>
+            @if (lugar.horarios && lugar.horarios.length > 0) {
+              <div class="space-y-1">
+                @for (h of lugar.horarios; track h.id_horario) {
+                  <div class="flex items-baseline justify-between gap-1.5 text-xs">
+                    <span class="font-semibold text-gray-700 w-14 shrink-0">{{ h.dia }}</span>
+                    <span class="text-gray-500 whitespace-nowrap">{{ h.horarioapertura }} – {{ h.horariocierre }}</span>
+                  </div>
                 }
               </div>
-              <h3 class="text-lg font-bold text-gray-800 mt-1">{{ lugar.nombre }}</h3>
-              <p class="text-sm text-gray-500 mt-0.5">{{ lugar.direccion }}</p>
+            } @else {
+              <p class="text-xs text-gray-400 italic">Sin horarios</p>
+            }
+          </div>
+        </div>
+
+        <!-- Catalogo CRUD -->
+        <div class="px-4 py-3 border-t border-gray-100">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Catalogo</p>
+            @if (mostrarFormCatalogo() !== lugar.id_radar) {
+              <button type="button" (click)="abrirFormCatalogo(lugar.id_radar!)"
+                class="text-xs font-medium text-purple-600 hover:text-purple-800 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Agregar
+              </button>
+            }
+          </div>
+
+          <!-- Formulario -->
+          @if (mostrarFormCatalogo() === lugar.id_radar) {
+            <div class="bg-purple-50 rounded-lg p-3 mb-2 border border-purple-200">
+              <p class="text-xs font-semibold text-purple-800 mb-2">
+                {{ editandoCatalogo() ? 'Editar' : 'Nuevo producto' }}
+              </p>
+              <div class="space-y-2">
+                <input type="text" [value]="editandoCatalogo() ? editandoCatalogo()!.nombre : nuevoCatalogo.nombre"
+                  (input)="editandoCatalogo() ? editandoCatalogo()!.nombre = $any($event.target).value : nuevoCatalogo.nombre = $any($event.target).value"
+                  placeholder="Nombre"
+                  class="w-full px-2 py-1 border border-gray-300 rounded text-xs" />
+                <input type="number" min="0" step="0.01"
+                  [value]="editandoCatalogo() ? editandoCatalogo()!.precio : nuevoCatalogo.precio"
+                  (input)="editandoCatalogo() ? editandoCatalogo()!.precio = +$any($event.target).value : nuevoCatalogo.precio = +$any($event.target).value"
+                  placeholder="Precio"
+                  class="w-full px-2 py-1 border border-gray-300 rounded text-xs" />
+                <input type="text"
+                  [value]="editandoCatalogo() ? (editandoCatalogo()!.descripcion ?? '') : (nuevoCatalogo.descripcion ?? '')"
+                  (input)="editandoCatalogo() ? editandoCatalogo()!.descripcion = $any($event.target).value : nuevoCatalogo.descripcion = $any($event.target).value"
+                  placeholder="Descripcion"
+                  class="w-full px-2 py-1 border border-gray-300 rounded text-xs" />
+                @if (fotoCatalogoPreview()) {
+                  <img [src]="fotoCatalogoPreview()!" class="w-16 h-16 object-cover rounded border" alt="preview" />
+                }
+                <input type="file" accept="image/*" (change)="onFotoCatalogoChange($event)"
+                  class="block text-xs text-gray-500 file:mr-1 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-purple-100 file:text-purple-700" />
+              </div>
+              <div class="flex gap-2 mt-2">
+                <button type="button" (click)="guardarProducto()" [disabled]="subiendoFotoCatalogo()"
+                  class="bg-purple-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-purple-700 disabled:opacity-50">
+                  {{ subiendoFotoCatalogo() ? 'Subiendo...' : (editandoCatalogo() ? 'Actualizar' : 'Guardar') }}
+                </button>
+                <button type="button" (click)="cerrarFormCatalogo()"
+                  class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-300">
+                  Cancelar
+                </button>
+              </div>
             </div>
-            <span class="text-lg font-bold text-green-600 whitespace-nowrap">${{ lugar.precio }}</span>
-          </div>
-        </div>
+          }
 
-        <!-- Stats -->
-        <div class="px-5 py-3 flex gap-4 text-sm text-gray-600 border-b border-gray-100">
-          <span title="Caminando" class="flex items-center gap-1">
-            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z"/>
-            </svg>
-            {{ lugar.walkMin ?? '-' }} min
-          </span>
-          <span title="En auto" class="flex items-center gap-1">
-            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17H5a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2h-3m-6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
-            </svg>
-            {{ lugar.driveMin ?? '-' }} min
-          </span>
-          <span title="Calificación" class="flex items-center gap-1">
-            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            {{ lugar.calificacion ?? '-' }}
-          </span>
-        </div>
-
-        @if (lugar.nota) {
-          <div class="px-5 py-2 text-sm text-gray-500 italic border-b border-gray-100">
-            "{{ lugar.nota }}"
-          </div>
-        }
-
-        <!-- Horarios -->
-        <div class="px-5 py-3 flex-1">
-          @if (lugar.horarios && lugar.horarios.length > 0) {
-            <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Horarios</p>
-            <div class="space-y-1">
-              @for (h of lugar.horarios; track h.id_horario) {
-                <div class="flex justify-between text-sm">
-                  <span class="font-medium text-gray-700 w-24">{{ h.dia }}</span>
-                  <span class="text-gray-500">{{ h.horarioapertura }} – {{ h.horariocierre }}</span>
+          <!-- Lista -->
+          @if (getCatalogo(lugar.id_radar!).length > 0) {
+            <div class="flex gap-2 overflow-x-auto pb-1 snap-x">
+              @for (prod of getCatalogo(lugar.id_radar!); track prod.id_catalogo) {
+                <div class="snap-start shrink-0 w-28 bg-white rounded shadow border border-gray-100 overflow-hidden flex flex-col text-xs relative group">
+                  @if (prod.foto) {
+                    <img [src]="prod.foto" alt="{{ prod.nombre }}" class="w-full h-16 object-cover" />
+                  } @else {
+                    <div class="w-full h-16 bg-gray-100 flex items-center justify-center text-gray-200">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                  }
+                  <div class="p-1 flex flex-col flex-1">
+                    <p class="font-bold text-gray-800 line-clamp-1">{{ prod.nombre }}</p>
+                    <span class="text-green-600 font-bold mt-auto">${{ prod.precio }}</span>
+                  </div>
+                  <div class="absolute top-0.5 right-0.5 flex gap-0.5 opacity-0 group-hover:opacity-100">
+                    <button type="button" (click)="iniciarEditarProducto(prod)" class="bg-yellow-500 text-white w-4 h-4 rounded text-xs hover:bg-yellow-600"><svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+                    <button type="button" (click)="eliminarProducto(prod)" class="bg-red-500 text-white w-4 h-4 rounded text-xs hover:bg-red-600"><svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                  </div>
                 </div>
               }
             </div>
           } @else {
-            <p class="text-sm text-gray-400 italic">Sin horarios registrados</p>
+            <p class="text-xs text-gray-400 italic">Sin productos</p>
           }
         </div>
 
-        <!-- Acciones -->
-        <div class="px-4 py-2 border-t border-gray-100 flex items-center justify-between gap-1">
-          <button (click)="toggleFavorito(lugar)" title="Favorito" class="transition hover:scale-110">
-            <svg class="w-5 h-5 transition" [class.text-red-500]="lugar.favorito" [class.fill-current]="lugar.favorito" [class.text-gray-300]="!lugar.favorito" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"/>
+        <!-- Seccion comentarios admin -->
+        <div class="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+          <button type="button" (click)="toggleComentarios(lugar.id_radar!)"
+            class="text-xs font-semibold text-gray-600 hover:text-gray-800 flex items-center gap-1">
+            Comentarios ({{ getComentarios(lugar.id_radar!).length }})
+            <svg class="w-3 h-3 transition" [class.rotate-180]="mostrarComentarios() === lugar.id_radar!" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+          </button>
+        </div>
+
+        @if (mostrarComentarios() === lugar.id_radar) {
+          <div class="px-4 py-2 border-t border-gray-100 bg-white max-h-32 overflow-y-auto space-y-1">
+            @if (getComentarios(lugar.id_radar!).length > 0) {
+              @for (com of getComentarios(lugar.id_radar!); track com.id_comentario) {
+                <div class="flex items-start justify-between gap-1 text-xs pb-1 border-b border-gray-200 last:border-b-0">
+                  <div class="flex-1 min-w-0">
+                    <div class="font-semibold text-gray-800">{{ com.nombre_estudiante }}</div>
+                    <div class="flex gap-0.5 mb-0.5">
+                      @for (i of [1, 2, 3, 4, 5]; track i) {
+                        <svg class="w-2.5 h-2.5" [class.text-yellow-400]="i <= com.calificacion" [class.text-gray-300]="i > com.calificacion" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                      }
+                    </div>
+                    <p class="text-gray-600 line-clamp-2">{{ com.opinion }}</p>
+                  </div>
+                  <button type="button" (click)="eliminarComentario(com.id_comentario!, lugar.id_radar!)" class="bg-red-500 text-white w-4 h-4 rounded flex-shrink-0 hover:bg-red-600">
+                    <svg class="w-2 h-2 m-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            } @else {
+              <p class="text-xs text-gray-400 italic">Sin comentarios</p>
+            }
+          </div>
+        }
+
+        <!-- Acciones admin -->
+        <div class="px-4 py-2 border-t border-gray-100 flex items-center justify-between gap-1 bg-gray-50/50">
+          <button (click)="toggleFavorito(lugar)" title="Favorito"
+            class="flex items-center gap-1 text-sm transition hover:scale-105"
+            [class.text-red-500]="lugar.favorito"
+            [class.text-gray-400]="!lugar.favorito">
+            <svg class="w-4 h-4 transition"
+              [class.fill-current]="lugar.favorito"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"/>
             </svg>
           </button>
           <div class="flex gap-1">
-            <a [href]="getMapsUrl(lugar.direccion)" target="_blank" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-xs transition">Abrir mapa</a>
-            <button (click)="editar(lugar)" class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 text-xs transition">Editar</button>
-            <button (click)="eliminar(lugar.id_radar!)" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 text-xs transition">Eliminar</button>
+            <a [href]="getMapsUrl(lugar.direccion)" target="_blank" class="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-green-700 transition">Mapa</a>
+            <button (click)="editar(lugar)" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs font-medium hover:bg-yellow-600 transition">Editar</button>
+            <button (click)="eliminar(lugar.id_radar!)" class="bg-red-500 text-white px-2 py-1 rounded text-xs font-medium hover:bg-red-600 transition">Eliminar</button>
           </div>
         </div>
 

@@ -1,26 +1,10 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json; charset=utf-8');
+require 'config.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
+setCorsHeaders();
+handleOptions();
 
-$host = 'sql101.byethost5.com';
-$user = 'b5_41127736';
-$pass = '8721davidD.w';
-$db   = 'b5_41127736_ServiHotelero';
-
-$conn = new mysqli($host, $user, $pass, $db);
-
-if ($conn->connect_error) {
-    die(json_encode(['error' => 'Conexion fallida']));
-}
-
-$conn->set_charset("utf8");
-
+$conn = getDbConnection();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
@@ -99,10 +83,11 @@ else if ($method === 'PUT' && $action === 'ubicacion') {
     }
 
     $id  = intval($data['id_usuario']);
-    $lat = floatval($data['latitud']);
-    $lng = floatval($data['longitud']);
+    $lat = doubleval($data['latitud']);
+    $lng = doubleval($data['longitud']);
 
-    if ($conn->query("UPDATE Usuarios SET latitud=$lat, longitud=$lng WHERE id_usuario=$id")) {
+    $sql = "UPDATE Usuarios SET latitud=$lat, longitud=$lng WHERE id_usuario=$id";
+    if ($conn->query($sql)) {
         echo json_encode(['message' => 'Ubicacion guardada']);
     } else {
         echo json_encode(['error' => $conn->error]);

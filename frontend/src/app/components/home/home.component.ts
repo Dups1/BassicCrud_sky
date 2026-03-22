@@ -3,10 +3,12 @@ import { RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { NavbarComponent } from '../navbar/navbar.component';
+
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink, CommonModule, NavbarComponent],
   templateUrl: './home.component.html'
 })
 export class HomeComponent implements OnInit {
@@ -16,10 +18,6 @@ export class HomeComponent implements OnInit {
 
   ubicacionEstado = signal<'pendiente' | 'obtenida' | 'denegada'>('pendiente');
   direccionActual = signal<string | null>(null);
-
-  get usuario() {
-    return this.authService.getSesion();
-  }
 
   ngOnInit() {
     this.pedirUbicacion();
@@ -53,12 +51,5 @@ export class HomeComponent implements OnInit {
         this.ubicacionEstado.set('denegada');
       }
     );
-  }
-
-  cerrarSesion() {
-    if (confirm('¿Deseas cerrar sesión?')) {
-      this.authService.cerrarSesion();
-      this.router.navigate(['/login']);
-    }
   }
 }
