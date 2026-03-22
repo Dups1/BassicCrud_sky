@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS Usuarios(
     nc VARCHAR(10) UNIQUE,
     password VARCHAR(255) NOT NULL,
     correo VARCHAR(100) NOT NULL,
+    rol ENUM('admin', 'estudiante', 'comerciante') NOT NULL DEFAULT 'estudiante',
     latitud DECIMAL(10,8),
     longitud DECIMAL(11,8),
     CHECK (correo IS NOT NULL AND correo REGEXP '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'),

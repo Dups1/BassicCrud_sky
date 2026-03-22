@@ -12,14 +12,15 @@ $action = $_GET['action'] ?? '';
 if ($method === 'POST' && $action === 'register') {
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!$data || empty($data['nombre']) || empty($data['password']) || empty($data['correo'])) {
-        die(json_encode(['error' => 'Nombre, correo y contraseña son obligatorios']));
+    if (!$data || empty($data['nombre']) || empty($data['password']) || empty($data['correo']) || empty($data['rol'])) {
+        die(json_encode(['error' => 'Nombre, correo, rol y contraseña son obligatorios']));
     }
 
     $nombre   = $conn->real_escape_string($data['nombre']);
     $correo   = $conn->real_escape_string($data['correo']);
     $nc       = isset($data['nc']) && $data['nc'] !== '' ? "'".$conn->real_escape_string($data['nc'])."'" : 'NULL';
     $password = password_hash($data['password'], PASSWORD_DEFAULT);
+    $rol      = in_array($data['rol'], ['admin', 'estudiante', 'comerciante']) ? $data['rol'] : 'estudiante';
 
     // Verificar correo duplicado
     $checkCorreo = $conn->query("SELECT id_usuario FROM Usuarios WHERE correo = '$correo'");
@@ -35,7 +36,7 @@ if ($method === 'POST' && $action === 'register') {
         }
     }
 
-    $sql = "INSERT INTO Usuarios (nombre, nc, correo, password) VALUES ('$nombre', $nc, '$correo', '$password')";
+    $sql = "INSERT INTO Usuarios (nombre, nc, correo, password, rol) VALUES ('$nombre', $nc, '$correo', '$password', '$rol')";
 
     if ($conn->query($sql)) {
         echo json_encode(['id' => $conn->insert_id, 'message' => 'Usuario registrado']);
@@ -67,6 +68,7 @@ else if ($method === 'POST' && $action === 'login') {
             'nombre'     => $usuario['nombre'],
             'nc'         => $usuario['nc'],
             'correo'     => $usuario['correo'],
+            'rol'        => $usuario['rol'],
             'message'    => 'Login exitoso'
         ]);
     } else {

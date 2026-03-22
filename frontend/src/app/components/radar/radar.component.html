@@ -1,12 +1,27 @@
 <div class="container mx-auto p-6">
+  <!-- Header con Tabs Admin -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex gap-4 border-b">
+      <button (click)="mostrarIngresos.set(false)" 
+        [class.border-b-2]="!mostrarIngresos()" [class.border-blue-600]="!mostrarIngresos()"
+        class="px-4 py-2 font-medium transition">
+        Lugares
+      </button>
+      <button (click)="mostrarIngresos.set(true)" 
+        [class.border-b-2]="mostrarIngresos()" [class.border-blue-600]="mostrarIngresos()"
+        class="px-4 py-2 font-medium transition">
+        Ingresos
+      </button>
+    </div>
+    <button (click)="cerrarSesion()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition">
+      Cerrar Sesión
+    </button>
+  </div>
+
+  <!-- Section Lugares -->
+  @if (!mostrarIngresos()) {
   <div class="flex items-center justify-between mb-6">
     <div class="flex items-center gap-3">
-      <a routerLink="/"
-        class="text-gray-500 hover:text-gray-800 transition" title="Regresar">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-      </a>
       <h1 class="text-3xl font-bold text-gray-800">Radar de Lugares</h1>
     </div>
     @if (!mostrarFormulario()) {
@@ -443,4 +458,42 @@
       </div>
     }
   </div>
+  }
+
+  <!-- Section Ingresos -->
+  @if (mostrarIngresos()) {
+  <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-lg p-6 mb-8 text-white">
+    <h2 class="text-xl font-bold mb-2">Ingresos Totales</h2>
+    <p class="text-3xl font-bold">{{ montoTotalIngresos() | currency }}</p>
+  </div>
+
+  @if (transferencias().length > 0) {
+    <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-100 border-b">
+          <tr>
+            <th class="px-6 py-3 text-left font-semibold text-gray-700">Usuario</th>
+            <th class="px-6 py-3 text-left font-semibold text-gray-700">Lugar</th>
+            <th class="px-6 py-3 text-left font-semibold text-gray-700">Duracion</th>
+            <th class="px-6 py-3 text-right font-semibold text-gray-700">Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (trans of transferencias(); track trans.id_transferencia) {
+            <tr class="border-b hover:bg-gray-50 transition">
+              <td class="px-6 py-3 text-sm font-medium text-gray-800">{{ trans.nombre_usuario }}</td>
+              <td class="px-6 py-3 text-sm text-gray-700">{{ trans.nombre_lugar }}</td>
+              <td class="px-6 py-3 text-sm text-gray-700">{{ trans.dias }} dias</td>
+              <td class="px-6 py-3 text-sm font-bold text-green-600 text-right">${{ trans.monto }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="px-6 py-8 text-center">
+      <p class="text-gray-400 text-sm">Sin transferencias aun</p>
+    </div>
+  }
+  }
 </div>

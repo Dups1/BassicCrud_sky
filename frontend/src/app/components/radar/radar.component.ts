@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { UbicacionService } from '../../services/ubicacion.service';
 import { CloudinaryService } from '../../services/cloudinary.service';
 import { RadarService } from '../../services/radar.service';
@@ -9,18 +9,20 @@ import { HorarioService } from '../../services/horario.service';
 import { CategoriaService } from '../../services/categoria.service';
 import { CatalogoService } from '../../services/catalogo.service';
 import { ComentarioService } from '../../services/comentario.service';
+import { TransferenciaService } from '../../services/transferencia.service';
 import { AuthService } from '../../services/auth.service';
 import { Radar } from '../../models/radar.model';
 import { Horario } from '../../models/horario.model';
 import { Categoria } from '../../models/categoria.model';
 import { Catalogo } from '../../models/catalogo.model';
 import { Comentario } from '../../models/comentario.model';
+import { Transferencia } from '../../models/transferencia.model';
 import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-radar',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './radar.component.html'
 })
 export class RadarComponent implements OnInit {
@@ -31,9 +33,11 @@ export class RadarComponent implements OnInit {
   private categoriaService = inject(CategoriaService);
   private cataloService = inject(CatalogoService);
   private comentarioService = inject(ComentarioService);
+  private transferenciaService = inject(TransferenciaService);
   private ubicacionService = inject(UbicacionService);
   private cloudinaryService = inject(CloudinaryService);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   importandoCsv = signal(false);
   lugares = signal<Radar[]>([]);
@@ -276,6 +280,8 @@ export class RadarComponent implements OnInit {
   cargando = signal(true);
   error = signal<string | null>(null);
   mostrarFormulario = signal(false);
+  mostrarIngresos = signal(false);
+  transferencias = signal<Transferencia[]>([]);
 
   nuevoLugar: Radar = this.lugarVacio();
   horariosForm: Horario[] = this.horariosDefault();
@@ -291,6 +297,19 @@ export class RadarComponent implements OnInit {
       },
       error: (err) => console.error('Error cargando categorias:', err)
     });
+    this.cargarTransferencias();
+  }
+
+  cargarTransferencias() {
+    this.transferenciaService.getAllAdmin().subscribe({
+      next: (data) => this.transferencias.set(data),
+      error: () => {}
+    });
+  }
+
+  montoTotalIngresos(): string {
+    const total = this.transferencias().reduce((sum, t) => sum + (Number(t.monto) || 0), 0);
+    return total.toFixed(2);
   }
 
   cargarLugares() {
@@ -611,4 +630,10 @@ export class RadarComponent implements OnInit {
     };
   }
 
+  cerrarSesion() {
+    if (confirm('¿Cerrar sesión?')) {
+      this.authService.cerrarSesion();
+      this.router.navigate(['/login']);
+    }
+  }
 }

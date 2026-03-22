@@ -18,9 +18,10 @@ export class AuthComponent {
   cargando = signal(false);
   error = signal<string | null>(null);
   exito = signal<string | null>(null);
+  rolSeleccionado = signal<'admin' | 'estudiante' | 'comerciante'>('estudiante');
 
   loginForm = { identificador: '', password: '' };
-  registerForm = { nombre: '', correo: '', nc: '', password: '', confirmar: '' };
+  registerForm = { nombre: '', correo: '', nc: '', password: '', confirmar: '', rol: 'estudiante' };
 
   cambiarModo(m: 'login' | 'register') {
     this.modo.set(m);
@@ -42,7 +43,9 @@ export class AuthComponent {
           this.error.set(res.error);
         } else {
           this.authService.guardarSesion(res);
-          this.router.navigate(['/']);
+          // Redireccionar según rol
+          const ruta = res.rol === 'admin' ? '/radar' : res.rol === 'comerciante' ? '/promocionarte' : '/radar-alumno';
+          this.router.navigate([ruta]);
         }
         this.cargando.set(false);
       },
@@ -72,7 +75,8 @@ export class AuthComponent {
     const payload: any = {
       nombre: this.registerForm.nombre,
       correo: this.registerForm.correo,
-      password: this.registerForm.password
+      password: this.registerForm.password,
+      rol: this.registerForm.rol
     };
     if (this.registerForm.nc) payload.nc = this.registerForm.nc;
 
@@ -82,7 +86,7 @@ export class AuthComponent {
           this.error.set(res.error);
         } else {
           this.exito.set('Registro exitoso. Ahora inicia sesión.');
-          this.registerForm = { nombre: '', correo: '', nc: '', password: '', confirmar: '' };
+          this.registerForm = { nombre: '', correo: '', nc: '', password: '', confirmar: '', rol: 'estudiante' };
           setTimeout(() => this.cambiarModo('login'), 1500);
         }
         this.cargando.set(false);

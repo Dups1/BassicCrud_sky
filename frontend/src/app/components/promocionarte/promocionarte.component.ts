@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { UbicacionService } from '../../services/ubicacion.service';
 import { CloudinaryService } from '../../services/cloudinary.service';
 import { RadarService } from '../../services/radar.service';
@@ -24,13 +24,14 @@ import { Comentario } from '../../models/comentario.model';
 @Component({
   selector: 'app-promocionarte',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './promocionarte.component.html'
 })
 export class PromocionarteComponent implements OnInit {
   private radarService = inject(RadarService);
   private horarioService = inject(HorarioService);
   private authService = inject(AuthService);
+  private router = inject(Router);
   private categoriaService = inject(CategoriaService);
   private tarjetaService = inject(TarjetaService);
   private promocionService = inject(PromocionService);
@@ -491,5 +492,12 @@ export class PromocionarteComponent implements OnInit {
 
   private lugarVacio(): Radar {
     return { id_categoria: 0, nombre: '', direccion: '', walkMin: null, driveMin: null, calificacion: null, precio: 0, nota: null };
+  }
+
+  cerrarSesion() {
+    if (confirm('¿Cerrar sesión?')) {
+      this.authService.cerrarSesion();
+      this.router.navigate(['/login']);
+    }
   }
 }

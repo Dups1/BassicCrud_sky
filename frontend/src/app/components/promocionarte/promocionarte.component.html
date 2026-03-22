@@ -1,14 +1,12 @@
 <div class="container mx-auto p-6">
   <div class="flex items-center justify-between mb-6">
-    <div class="flex items-center gap-3">
-      <a routerLink="/" class="text-gray-500 hover:text-gray-800 transition" title="Regresar">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-      </a>
-      <h1 class="text-3xl font-bold text-gray-800">Mis Lugares</h1>
-    </div>
-    <div class="flex gap-2">
+    <h1 class="text-3xl font-bold text-gray-800">Mis Lugares</h1>
+    <button (click)="cerrarSesion()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition">
+      Cerrar Sesión
+    </button>
+  </div>
+
+  <div class="flex gap-2 mb-4">
       <button (click)="mostrarModalTarjeta.set(true)"
         class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition font-medium text-sm flex items-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +23,6 @@
         </button>
       }
     </div>
-  </div>
 
   <!-- Tarjetas guardadas -->
   @if (tarjetas().length > 0) {

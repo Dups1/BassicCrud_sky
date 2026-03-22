@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { RadarService } from '../../services/radar.service';
 import { CategoriaService } from '../../services/categoria.service';
@@ -15,7 +15,7 @@ import { Comentario } from '../../models/comentario.model';
 @Component({
   selector: 'app-radar-alumno',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './radar-alumno.component.html'
 })
 export class RadarAlumnoComponent implements OnInit {
@@ -24,6 +24,7 @@ export class RadarAlumnoComponent implements OnInit {
   private cataloService = inject(CatalogoService);
   private comentarioService = inject(ComentarioService);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   lugares = signal<Radar[]>([]);
   categorias = signal<Categoria[]>([]);
@@ -333,5 +334,12 @@ export class RadarAlumnoComponent implements OnInit {
     const a = this.normIdCategoria(cur);
     const b = this.normIdCategoria(id);
     return a != null && b != null && a === b;
+  }
+
+  cerrarSesion() {
+    if (confirm('¿Cerrar sesión?')) {
+      this.authService.cerrarSesion();
+      this.router.navigate(['/login']);
+    }
   }
 }
